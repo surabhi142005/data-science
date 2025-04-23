@@ -1,0 +1,181 @@
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.base import BaseEstimator, TransformerMixin
+import numpy as np
+
+# Custom transformer to extract Title from Name
+class TitleExtractor(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X):
+        titles = X["Name"].str.extract("([A-Za-z]+)\.", expand=False)
+        return titles.to_frame()
+
+# Columns
+numeric_features = ["Age", "Fare"]
+categorical_features = ["Sex", "Embarked", "Pclass"]
+name_feature = ["Name"]
+
+# Pipelines
+numeric_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+
+categorical_transformer = Pipeline(steps=[
+    ("onehot", OneHotEncoder(handle_unknown="ignore"))
+])
+
+name_transformer = Pipeline(steps=[
+    ("title", TitleExtractor()),
+    ("onehot", OneHotEncoder(handle_unknown="ignore"))
+])
+
+# Full preprocessor
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", numeric_transformer, numeric_features),
+        ("cat", categorical_transformer, categorical_features),
+        ("name", name_transformer, name_feature)
+    ]
+)
+
+# Apply preprocessing
+X = df.drop(columns=["PassengerId", "Survived", "Ticket", "Cabin"])
+y = df["Survived"]
+
+X_preprocessed = preprocessor.fit_transform(X)
+X_preprocessed.shape
+
+
+
+
+  from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X_preprocessed, y, test_size=0.2, random_state=42)
+
+# Initialize models
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=1000),
+    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)
+}
+
+# Train and evaluate
+results = {}
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    results[name] = {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred),
+        "Report": classification_report(y_test, y_pred, output_dict=True)
+    }
+
+results
+
+
+
+
+
+project/
+├── data/
+│   └── tested.csv
+├── notebooks/
+│   └── exploration.ipynb
+├── src/
+│   ├── __init__.py
+│   ├── preprocess.py
+│   ├── train_model.py
+│   └── evaluate.py
+├── requirements.txt
+└── README.md
+
+# src/preprocess.py
+[from previous content...]
+
+# src/train_model.py
+[from previous content...]
+
+# src/evaluate.py
+[from previous content...]
+
+# requirements.txt
+pandas
+scikit-learn
+
+# README.md
+# Titanic Survival Prediction
+
+This project builds a machine learning model to predict survival on the Titanic using passenger data.
+
+## 📁 Project Structure
+```
+project/
+├── data/              # Dataset location
+├── notebooks/         # For EDA and experimentation
+├── src/               # Source code
+│   ├── preprocess.py  # Preprocessing pipeline
+│   ├── train_model.py # Model training
+│   └── evaluate.py    # Evaluation metrics
+├── requirements.txt   # Project dependencies
+└── README.md          # Project overview
+```
+
+## ⚙️ Setup
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## 🚀 Usage
+```bash
+# Run training
+python src/train_model.py
+```
+
+## ✅ Features
+- Handles missing values using median imputation
+- Extracts and encodes titles from names
+- One-hot encodes categorical variables
+- Scales numerical features
+- Compares Logistic Regression and Random Forest
+
+## 📊 Evaluation Metrics
+Each model prints out:
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Full classification report
+
+## 📦 Requirements
+```txt
+pandas
+scikit-learn
+```
+
+## 📈 Example Output
+```
+Random Forest Performance:
+              precision    recall  f1-score   support
+
+           0       0.87      0.90      0.88       105
+           1       0.83      0.78      0.80        74
+
+    accuracy                           0.85       179
+   macro avg       0.85      0.84      0.84       179
+weighted avg       0.85      0.85      0.85       179
+```
